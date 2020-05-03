@@ -1,4 +1,17 @@
 ﻿@page "/counter"
+@using  System.Globalization
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Nav
+@inject Microsoft.Extensions.Localization.IStringLocalizer<Counter> Loc
+
+<strong>Culture:</strong>
+<h1>@Loc["String1"]</h1>
+<select @bind="Culture">
+  @foreach (var culture in supportedCultures)
+  {
+    <option value="@culture">@culture.DisplayName</option>
+  }
+</select>
 
 <h1>Counter</h1>
 
@@ -7,10 +20,32 @@
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
 @code {
-    private int currentCount = 0;
+  private int currentCount = 0;
 
-    private void IncrementCount()
+  private void IncrementCount()
+  {
+    currentCount++;
+  }
+
+  CultureInfo[] supportedCultures = new[]
+  {
+        new CultureInfo("en"),
+        new CultureInfo("de"),
+        new CultureInfo("ru"),
+    };
+
+  CultureInfo Culture
+  {
+    get => CultureInfo.CurrentCulture;
+    set
     {
-        currentCount++;
+      if (CultureInfo.CurrentCulture != value)
+      {
+        var js = (IJSInProcessRuntime)JSRuntime;
+        js.InvokeVoid("blazorCulture.set", value.Name);
+
+        Nav.NavigateTo(Nav.Uri, forceLoad: true);
+      }
     }
+  }
 }
